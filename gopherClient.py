@@ -14,8 +14,7 @@ def printBuffer(request):
         
 
 
-printBuffer("\r\n")
-
-printBuffer("new\r\n")
+# printBuffer("\r\n")
+printBuffer("v2/vs?\tedu\r\n")
 
 
