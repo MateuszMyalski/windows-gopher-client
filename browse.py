@@ -126,15 +126,11 @@ def go(tk_adress_field, tk_browser_field):
     tk_browser_field.delete('1.0', "end")
 
     # Establish connection and receive data
-    try:
-        connection = conn.openConnection(hostname, port)
-        page_source = conn.getData(connection, adress + query)
-    except Exception as e:
-        tk_browser_field.insert("insert", repr(e), "error")
-        return 0
+    connection = conn.openConnection(hostname, port)
+    page_source = conn.getData(connection, adress + query)
 
     # DEBUG
-    import os
+    # import os
     # os.system('cls')
 
     # Parse received data
@@ -156,12 +152,8 @@ def downloadFile(url, name):
     query = parsed_url.query
 
     # Establish connection and receive data
-    try:
-        connection = conn.openConnection(hostname, port)
-        file_source = conn.getData(connection, adress + query)
-    except Exception as e:
-        raise Exception("Error while downloading file:" + repr(e))
-        return 0
+    connection = conn.openConnection(hostname, port)
+    file_source = conn.getData(connection, adress + query)
 
     # Save received data
     with open(name, "wb") as file:

@@ -1,9 +1,12 @@
 import sys
+import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import simpledialog
 from tkinter import messagebox
+from tkinter import filedialog
 
+import errorHandler
 import constans as const
 import historyFunc as history
 import browse
@@ -88,16 +91,12 @@ def _downloadType(link_details):
             letter = "_"
         file_name += letter
 
-    download_status = browse.downloadFile(gopher_url, file_name)
-    if not download_status:
-        messagebox.showerror(
-            "Error!",
-            "An error occured while downloading."
-        )
-        return 0
+    try:
+        browse.downloadFile(gopher_url, file_name)
+    except Exception as ex:
+        errorHandler.handle(ex, browser_field)
 
     if file_type in auto_exec_formats:
-        import os
         os.path.dirname(os.path.realpath(__file__))
         os.system("start " + file_name)
 
@@ -121,22 +120,46 @@ def _searchType(link_details):
 
 
 # SHORTCUTS BEHAVIOUR ---------------------------------------------------------
-def dumpPage():
-    """Dump page to txt file"""
-    file_name_raw = simpledialog.askstring(
-        "Dump page",
-        "Saving page content in file with name:"
+def loadPage():
+    file_name = filedialog.askopenfilename(
+        initialdir=os.path.realpath(__file__),
+        title="Select file",
+        filetypes=(
+            ("All files", "*.*"),
+            ("Gopher raw files", "*.gopherraw"),
+            ("Text files", "*.txt")
+        )
     )
 
-    file_name = ""
-    if file_name_raw:
-        for letter in file_name_raw:
-            if not letter.lower() in const.FILENAME_CHAR_WHITELIST:
-                letter = "_"
-            file_name += letter
+    if file_name:
+        with open(file_name, "rb") as file:
+            parsePageLocally(file)
 
-        with open(file_name + ".txt", "w") as file:
-            file.write(browser_field.get("1.0", "end"))
+
+def dumpPage(method):
+    """Dump page to txt file"""
+    file_name = filedialog.asksaveasfilename(
+        initialdir=os.path.realpath(__file__),
+        defaultextension='.txt',
+        title="Select file",
+        filetypes=(
+            ("Gopher raw files", "*.gopherraw"),
+            ("Text files", "*.txt")
+        )
+    )
+
+    if file_name[-3:] == "txt":
+        try:
+            with open(file_name, "w") as file:
+                file.write(browser_field.get("1.0", "end"))
+        except Exception as ex:
+            errorHandler.handle(ex, browser_field)
+
+    if file_name[-3:] == "raw":
+        try:
+            browse.downloadFile(adress_field.get(), file_name)
+        except Exception as ex:
+            errorHandler.handle(ex, browser_field)
 
 
 def altColors():
@@ -151,6 +174,7 @@ def altColors():
 
 
 def changeFontSize(inc):
+    """Change font size"""
     global FONT_SIZE
 
     if inc == "+" and FONT_SIZE < 90:
@@ -162,11 +186,33 @@ def changeFontSize(inc):
     applyScheme(COLOR_SCHEME)
 
 
+def parsePageLocally(file):
+    adress_field.delete(0, "end")
+    browser_field.config(state="normal", cursor="wait")
+    browser_field.delete('1.0', "end")
+    import tkHyperlinkManager
+    hyperlink_manager = tkHyperlinkManager.HyperlinkManager(
+        browser_field,
+        browse.downloadFile)
+
+    for line in file:
+        parsed_line = browse.parseLine(line, hyperlink_manager)
+        browser_field.insert("insert", parsed_line[0], parsed_line[1])
+
+    browser_field.config(state="disabled", cursor="")
+
+
+def showAbout():
+    """Show instruction about client"""
+    with open("about.txt", "rb") as file:
+        parsePageLocally(file)
+
+
 def _ctrPressed(event):
     pressedKey = event.keycode
 
     if pressedKey == 83:
-        dumpPage()
+        dumpPage("raw")
 
     if pressedKey == 189:
         changeFontSize("-")
@@ -175,7 +221,7 @@ def _ctrPressed(event):
         changeFontSize("+")
 
 
-        # GUI INIT --------------------------------------------------------------------
+# GUI INIT --------------------------------------------------------------------
 browser_app = tk.Tk()
 browser_app.geometry(const.DEFAULT_GEOMETRY)
 browser_app.title(const.DEFAULT_WINDOW_TITLE)
@@ -197,8 +243,11 @@ main_wrapper.grid_columnconfigure(0, weight=1)
 
 def go_handler():
     browser_field.config(cursor="watch")
-    browse.go(adress_field, browser_field)
-    history.add(adress_field.get())
+    try:
+        browse.go(adress_field, browser_field)
+        history.add(adress_field.get())
+    except Exception as ex:
+        errorHandler.handle(ex, browser_field)
     browser_field.config(cursor="")
 
 
@@ -234,7 +283,7 @@ def linkClick_handler(link_details):
         historyBack_handler()
 
     # DOWNLOAD type item
-    if link_type in "4569gI":
+    if link_type in "4569gId":
         _downloadType(link_details)
 
     # SEARCH type item
@@ -243,7 +292,6 @@ def linkClick_handler(link_details):
 
     # HTML type item
     if link_type == 'h':
-        import os
         http_url = link_details[2].replace("URL:", "")
         os.system("start " + http_url)
 
@@ -280,20 +328,23 @@ applyScheme(COLOR_SCHEME)
 
 # WINDOW`S MENU ---------------------------------------------------------------
 browser_menubar = tk.Menu(browser_app)
-filemenu = tk.Menu(browser_menubar, tearoff=0)
+savemenu = tk.Menu(browser_menubar, tearoff=0)
 
-browser_menubar.add_command(label="Dump page", command=dumpPage)
+browser_menubar.add_cascade(label="Save page", menu=savemenu)
+savemenu.add_command(label="Raw", command=lambda: dumpPage("raw"))
+savemenu.add_command(label="Readable", command=lambda: dumpPage("readable"))
+browser_menubar.add_command(label="Load page", command=loadPage)
 browser_menubar.add_command(label="Alternate color scheme", command=altColors)
-browser_menubar.add_command(label="About")
-browser_menubar.add_command(label="File")
+browser_menubar.add_command(label="About", command=showAbout)
 browser_app.config(menu=browser_menubar)
 
 
 # STATUS BAR ------------------------------------------------------------------
 statusbar = ttk.Label(bottom_wrapper, border=1, relief="sunken", anchor="w")
-statusbar.config(text="Gopher client by Mateusz Myalski")
+statusbar.config(text=const.MOTD)
 statusbar.pack(fill="x", expand="true")
 
 # MAIN LOOP -------------------------------------------------------------------
 go_handler()
+
 browser_app.mainloop()

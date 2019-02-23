@@ -1,6 +1,6 @@
 from tkinter import *
-
-FILENAME_CHAR_WHITELIST = "qwertyuiopasdfghjklzxcvbnm|1234567890._"
+from tkinter import messagebox
+import constans as const
 
 
 class HyperlinkManager:
@@ -57,10 +57,17 @@ class HyperlinkManager:
             os.path.dirname(os.path.realpath(__file__))
             programm_path = (path.abspath(sys.modules['__main__'].__file__))
             os.system(programm_path + " " + gopher_url)
-            return
+            return 1
 
         link_name = link_name.replace(" ", "_")
         file_type = link_name[-4:].lower()
+
+        answer = messagebox.askquestion(
+            file_type.upper() + " FILE",
+            "To open this file you need to download it. Shall I to do that?"
+        )
+        if answer == "no":
+            return 0
 
         if link_type in '01':
             file_type = ".txt"
@@ -71,7 +78,7 @@ class HyperlinkManager:
 
         file_name = ""
         for letter in link_name:
-            if not letter.lower() in FILENAME_CHAR_WHITELIST:
+            if not letter.lower() in const.FILENAME_CHAR_WHITELIST:
                 letter = "_"
             file_name += letter
 

@@ -1,5 +1,6 @@
 import socket
 import constans as const
+import errorHandler
 
 SOCKET_STATUS = ""
 

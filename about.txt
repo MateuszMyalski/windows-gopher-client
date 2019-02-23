@@ -1,0 +1,77 @@
+
+                           _                 _   
+                     /\   | |               | |  
+                    /  \  | |__   ___  _   _| |_ 
+                   / /\ \ | '_ \ / _ \| | | | __|
+                  / ____ \| |_) | (_) | |_| | |_ 
+                 /_/    \_\_.__/ \___/ \__,_|\__|
+                                                              
+*********************************************************************                                
+@programm_name        = Gopher client for Windows 
+@author               = Mateusz Waldemar Myalski
+@programmed_with      = Python 3
+@version              = 1.0
+h@repository	URL:http://myalski.co.uk	myalski.co.uk	80
+h@author_page	URL:http://myalski.co.uk	myalski.co.uk	80
+*********************************************************************
+
+
+=[SELF COMPILE]======================================================
+If you would like to recompile this client by your own you can clone 
+the GIT repository. 
+
+This Python script is using:
+-tkinter
+-socket
+-urllib
+-os
+-sys
+
+By changing values in module "constans.py" you can modify color schemes,
+or change default page on programm start.
+
+
+=[DESCRIPTION]=======================================================
+This program is created to not use any external programms for propper
+executing. Just plug&play.
+Known image files and HTML type links will execute automaticly after
+finished downloading.
+You can use adress field to use Veronica-2 search engine, just type
+there your querry and hit GO button.
+
+This programm allow you to be executed with gopher link arg.
+eg. programm_name.exe gopher://gopher.floodgap.com/
+or eg. python gopherClient.pyw gopher://gopher.floodgap.com/
+
+You can download the page in raw/readable format.
+Raw format allows you to open the file with this client and parse
+it propperly.
+Readable format download the visible content in browser field.
+
+When the name of downloaded file doesn`t have specified extension it
+will have added ".unknown" string. Change this if you know the
+correct file format.
+
+
+=[SHORTCUTS]=========================================================
+- Right Mouse Press 
+                    History back
+
+- Middle Mouse Press 
+                    When on <DIR> - open new window
+                    Other type of link - download file
+
+- CTRL + C 
+                    Copy text
+
+- CRTL + S
+                    Save current page in raw format.
+
+- CTRL + +
+                    Make font bigger
+
+- CTRL + -
+                    Make font smaller
+
+- Enter
+                    Run connection.

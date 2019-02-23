@@ -1,6 +1,7 @@
 DEFAULT_ADRESS = r"gopher://gopher.floodgap.com:70"
 DEFAULT_GEOMETRY = "980x800"
 DEFAULT_WINDOW_TITLE = "Gopher client"
+MOTD = "Gopher client by Mateusz Myalski"
 FILENAME_CHAR_WHITELIST = "qwertyuiopasdfghjklzxcvbnm|1234567890._"
 DECODING_STANDARD = "UTF-8"
 
@@ -19,6 +20,7 @@ TYPENAME = {'0': '<TEXT>',
             '9': '<BINARY>',
             '+': '<REDUNDANT>',
             'I': '<IMAGE>',
+            'd': '<DOCUMENT>',
             's': '<SOUND>',
             'h': '<HTML>',
             'g': '<GIF>',
