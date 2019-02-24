@@ -69,9 +69,9 @@ def parseLine(line, hyperlink_manager):
     parsed_line = parsed_line.replace("null.host", "")
 
     # International message
-    if parsed_line.startswith("i") and parsed_line.endswith("1" + const.CRLF):
+    if parsed_line.startswith("i") and const.TAB in parsed_line:
         parsed_line = parsed_line[1:]
-        parsed_line = parsed_line[:-3]
+        parsed_line = parsed_line.split(const.TAB)[0]
         parsed_line += const.CRLF
         tag = "international"
         return const.TAB + parsed_line, tag

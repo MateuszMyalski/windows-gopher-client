@@ -265,6 +265,7 @@ def rightClick_handler(event):
 
 
 def linkClick_handler(link_details):
+    print(link_details)
     link_type, link_name, adress, domain, port = link_details
     gopher_url = "gopher://" + domain + ":" + port + adress
 
@@ -328,11 +329,8 @@ applyScheme(COLOR_SCHEME)
 
 # WINDOW`S MENU ---------------------------------------------------------------
 browser_menubar = tk.Menu(browser_app)
-savemenu = tk.Menu(browser_menubar, tearoff=0)
 
-browser_menubar.add_cascade(label="Save page", menu=savemenu)
-savemenu.add_command(label="Raw", command=lambda: dumpPage("raw"))
-savemenu.add_command(label="Readable", command=lambda: dumpPage("readable"))
+browser_menubar.add_command(label="Save page", command=dumpPage)
 browser_menubar.add_command(label="Load page", command=loadPage)
 browser_menubar.add_command(label="Alternate color scheme", command=altColors)
 browser_menubar.add_command(label="About", command=showAbout)
