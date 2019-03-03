@@ -1,7 +1,6 @@
 DEFAULT_ADRESS = r"gopher://gopher.floodgap.com:70"
 DEFAULT_GEOMETRY = "980x800"
 DEFAULT_WINDOW_TITLE = "Gopher client"
-MOTD = "Gopher client by Mateusz Myalski"
 FILENAME_CHAR_WHITELIST = "qwertyuiopasdfghjklzxcvbnm|1234567890._"
 DECODING_STANDARD = "UTF-8"
 
@@ -29,6 +28,7 @@ TYPENAME = {'0': '<TEXT>',
 
 MAX_HISTORY_LIST = 20
 
+
 # STYLES ----------------------------------------------------------------------
 FONT = "fixedsys"
 FONT_SIZE = 9
@@ -42,7 +42,8 @@ COLOR_SCHEME = {
         "international_message_color": "yellow",
         "error_color": "red",
         "background_color": "black",
-        "select_background_color": "gray"
+        "select_background_color": "gray",
+        "find_background": "chocolate3"
     },
 
     "light": {
@@ -51,6 +52,7 @@ COLOR_SCHEME = {
         "international_message_color": "red",
         "error_color": "red",
         "background_color": "white",
+        "find_background": "plum1",
         "select_background_color": "orange"
     }
 }

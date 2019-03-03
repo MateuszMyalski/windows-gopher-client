@@ -46,7 +46,6 @@ def getData(connection, command=""):
         SOCKET_STATUS = "Sending command."
         connection.send(command.encode())
         SOCKET_STATUS = "Timeout setted."
-        # connection.settimeout(0)
 
         SOCKET_STATUS = "Receiving packets."
 

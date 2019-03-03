@@ -52,7 +52,7 @@ def parseLine(line, hyperlink_manager):
                 [1] - tag
     """
 
-    parsed_line = line.decode(const.DECODING_STANDARD)
+    parsed_line = line.decode(const.DECODING_STANDARD, errors="replace")
     tag = ""
 
     if not line:

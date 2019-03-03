@@ -20,9 +20,10 @@ h@author_page	URL:http://myalski.co.uk	myalski.co.uk	80
 If you would like to recompile this client by your own you can clone 
 the GIT repository. 
 
-This Python script is using:
+This Python script is working thanks to modules:
 -tkinter
 -socket
+-threading
 -urllib
 -os
 -sys
@@ -67,10 +68,14 @@ correct file format.
 - CRTL + S
                     Save current page.
 
-- CTRL + +
+- CRTL + F
+                    Search on page. When highlighted text on screen the 
+                    second execution will delete selections.
+
+- CTRL + MOUSE WHEEL UP
                     Make font bigger
 
-- CTRL + -
+- CTRL + MOUSE WHEEL DOWN
                     Make font smaller
 
 - Enter

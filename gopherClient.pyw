@@ -1,6 +1,7 @@
 import sys
 import os
 import threading
+import base64
 import tkinter as tk
 from tkinter import ttk
 from tkinter import simpledialog
@@ -25,6 +26,8 @@ def applyScheme(scheme):
         const.COLOR_SCHEME[scheme]["font_color"]
     hyperlink_color = \
         const.COLOR_SCHEME[scheme]["hyperlink_color"]
+    find_background = \
+        const.COLOR_SCHEME[scheme]["find_background"]
     international_message_color = \
         const.COLOR_SCHEME[scheme]["international_message_color"]
     error_color = \
@@ -49,6 +52,10 @@ def applyScheme(scheme):
         foreground=international_message_color,
         font=const.FONT + ' ' + str(FONT_SIZE)
     )
+    browser_field.tag_config(
+        "search",
+        background=find_background
+    )
     browser_field.config(
         bg=background_color,
         fg=font_color,
@@ -68,6 +75,11 @@ if len(sys.argv) == 2:
 
 def _downloadType(link_details):
     link_type, link_name, adress, domain, port = link_details
+    try:
+        if adress[0] != '/':
+            adress = '/' + adress
+    except:
+        pass
     gopher_url = "gopher://" + domain + ":" + port + adress
 
     auto_exec_formats = [".gif", ".jpeg", ".jpg", ".bmp", ".png", ".txt"]
@@ -111,6 +123,11 @@ def _downloadType(link_details):
 
 def _searchType(link_details):
     link_type, link_name, adress, domain, port = link_details
+    try:
+        if adress[0] != '/':
+            adress = '/' + adress
+    except:
+        pass
     gopher_url = "gopher://" + domain + ":" + port + adress
     query = simpledialog.askstring(
         "Search",
@@ -129,6 +146,7 @@ def _searchType(link_details):
 
 # SHORTCUTS BEHAVIOUR ---------------------------------------------------------
 def loadPage():
+    """Load local file"""
     file_name = filedialog.askopenfilename(
         initialdir=os.path.realpath(__file__),
         title="Select file",
@@ -170,6 +188,63 @@ def dumpPage():
             errorHandler.handle(ex, browser_field)
 
 
+def copyText():
+    """Copy selected text to clipboard."""
+    browser_app.clipboard_clear()
+    browser_app.clipboard_append(browser_field.get(tk.SEL_FIRST, tk.SEL_LAST))
+
+
+def findText():
+    """Highlight phrase to find"""
+    already_seleceted = browser_field.tag_nextrange("search", "1.0", "end")
+    if len(already_seleceted) > 0:
+        browser_field.tag_remove("search", "1.0", "end")
+        return 1
+
+    string_to_find = simpledialog.askstring(
+        "Search phrase",
+        "Enter word or pharase to search."
+    )
+    if string_to_find is None:
+        return 0
+
+    countVar = tk.StringVar()
+    found = browser_field.search(
+        string_to_find, 1.0,
+        stopindex="end",
+        count=countVar,
+        exact=False,
+        nocase=True
+    )
+    if found == "":
+        messagebox.showinfo(
+            "Not found",
+            "On this page not found pharase: " + string_to_find
+        )
+        return 0
+
+    while found:
+        length = len(string_to_find)
+        row, col = found.split('.')
+        end = int(col) + length
+        end = row + '.' + str(end)
+        browser_field.tag_add('search', found, end)
+        start = end
+        found = browser_field.search(
+            string_to_find,
+            start,
+            stopindex="end",
+            exact=False,
+            nocase=True
+        )
+    found_ammount = len(browser_field.tag_ranges("search")) / 2
+    browser_app.bell(displayof=0)
+    messagebox.showinfo(
+        "Reasults",
+        "Found %d occurences" % found_ammount
+    )
+
+
 def altColors():
     """Alternate color scheme"""
     global COLOR_SCHEME
@@ -180,20 +255,21 @@ def altColors():
     applyScheme(COLOR_SCHEME)
 
 
-def changeFontSize(inc):
+def changeFontSize(event):
     """Change font size"""
     global FONT_SIZE
 
-    if inc == "+" and FONT_SIZE < 90:
+    if event.delta == 120 and FONT_SIZE < 21 and event.state == 12:
         FONT_SIZE += 3
 
-    if inc == "-" and FONT_SIZE > 1:
+    if event.delta == -120 and FONT_SIZE > 1 and event.state == 12:
         FONT_SIZE -= 3
 
     applyScheme(COLOR_SCHEME)
 
 
 def parsePageLocally(file):
+    """Pare page from local file"""
     adress_field.delete(0, "end")
     browser_field.config(state="normal", cursor="wait")
     browser_field.delete('1.0', "end")
@@ -215,23 +291,18 @@ def showAbout():
         parsePageLocally(file)
 
 
-def _ctrPressed(event):
-    pressedKey = event.keycode
-
-    if pressedKey == 83:
-        dumpPage()
-
-    if pressedKey == 189:
-        changeFontSize("-")
-
-    if pressedKey == 187:
-        changeFontSize("+")
+def goFloodgap():
+    """Process user to floodgap main server."""
+    adress_field.delete(0, "end")
+    adress_field.insert(0, const.DEFAULT_ADRESS)
+    go_handler()
 
 
 # GUI INIT --------------------------------------------------------------------
 browser_app = tk.Tk()
 browser_app.geometry(const.DEFAULT_GEOMETRY)
 browser_app.title(const.DEFAULT_WINDOW_TITLE)
+browser_app.iconbitmap("icon.ico")
 
 # SETUP FRAME WRAPPERS --------------------------------------------------------
 top_wrapper = tk.Frame(browser_app)
@@ -269,14 +340,6 @@ def historyBack_handler(event=None):
     history.back(adress_field, go_handler)
 
 
-def update():
-    print(threading.active_count())
-    browser_app.after(100, update)
-
-
-update()
-
-
 def enterPressed_handler(event):
     go_handler()
 
@@ -288,6 +351,11 @@ def rightClick_handler(event):
 
 def linkClick_handler(link_details):
     link_type, link_name, adress, domain, port = link_details
+    try:
+        if adress[0] != '/':
+            adress = '/' + adress
+    except:
+        pass
     gopher_url = "gopher://" + domain + ":" + port + adress
 
     # CLICKABLE type item
@@ -342,11 +410,23 @@ go_button.pack(side="right", padx=3)
 # SHORTCUTS BEHAVIOUR ---------------------------------------------------------
 browser_app.bind("<Return>", enterPressed_handler)
 browser_app.bind("<Button-3>", historyBack_handler)
-browser_app.bind("<Control-Key>", _ctrPressed)
+browser_app.bind("<Control-s>", lambda event: dumpPage())
+browser_app.bind("<Control-c>", lambda event: copyText())
+browser_app.bind("<Control-f>", lambda event: findText())
+browser_app.bind("<MouseWheel>", changeFontSize)
+
 
 # BROWSER TEXT AREA -----------------------------------------------------------
-browser_field = tk.Text(main_wrapper, spacing1=5, spacing2=10)
-browser_field.pack(side="left", fill="both", expand=True, padx=3, pady=3)
+browser_field = tk.Text(
+    main_wrapper,
+    borderwidth=0,
+    spacing1=5,
+    spacing2=10,
+    padx=5,
+    pady=5,
+    wrap="word"
+)
+browser_field.pack(side="left", fill="both", expand=True)
 
 browser_field.config(state="disabled")
 
@@ -362,6 +442,7 @@ browser_menubar = tk.Menu(browser_app)
 
 browser_menubar.add_command(label="Save page", command=dumpPage)
 browser_menubar.add_command(label="Load page", command=loadPage)
+browser_menubar.add_command(label="Floodgap", command=goFloodgap)
 browser_menubar.add_command(label="Alternate color scheme", command=altColors)
 browser_menubar.add_command(label="About", command=showAbout)
 browser_app.config(menu=browser_menubar)
@@ -369,7 +450,6 @@ browser_app.config(menu=browser_menubar)
 
 # STATUS BAR ------------------------------------------------------------------
 statusbar = ttk.Label(bottom_wrapper, border=1, relief="sunken", anchor="w")
-statusbar.config(text=const.MOTD)
 statusbar.pack(fill="x", expand="true")
 
 # MAIN LOOP -------------------------------------------------------------------
