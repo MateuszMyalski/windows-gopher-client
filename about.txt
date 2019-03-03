@@ -65,7 +65,7 @@ correct file format.
                     Copy text
 
 - CRTL + S
-                    Save current page in raw format.
+                    Save current page.
 
 - CTRL + +
                     Make font bigger

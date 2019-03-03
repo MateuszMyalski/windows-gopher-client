@@ -1,5 +1,6 @@
 import sys
 import os
+import threading
 import tkinter as tk
 from tkinter import ttk
 from tkinter import simpledialog
@@ -77,28 +78,35 @@ def _downloadType(link_details):
         file_type = ".unknown"
         link_name += file_type
 
-    answer = messagebox.askquestion(
-        file_type.upper() + " FILE",
-        "To open this file you need to download it. Shall I to do that?"
+    file_name = filedialog.asksaveasfilename(
+        initialdir=os.path.realpath(__file__) + "/",
+        defaultextension=file_type,
+        title="Select file",
+        filetypes=(
+            ("Default file type", "*" + file_type),
+            ("Any file", "*.*")
+        )
     )
 
-    if answer == "no":
+    if file_name == "":
         return 0
 
-    file_name = ""
-    for letter in link_name:
-        if not letter.lower() in const.FILENAME_CHAR_WHITELIST:
-            letter = "_"
-        file_name += letter
+    def threadFunc():
+        browser_field.config(cursor="watch")
+        try:
+            browse.downloadFile(gopher_url, file_name)
+        except Exception as ex:
+            errorHandler.handle(ex, browser_field)
 
-    try:
-        browse.downloadFile(gopher_url, file_name)
-    except Exception as ex:
-        errorHandler.handle(ex, browser_field)
+        if file_type in auto_exec_formats:
+            os.path.dirname(os.path.realpath(__file__))
+            os.system("start " + file_name)
+        browser_field.config(cursor="")
 
-    if file_type in auto_exec_formats:
-        os.path.dirname(os.path.realpath(__file__))
-        os.system("start " + file_name)
+        return 1
+
+    download_thread = threading.Thread(target=threadFunc)
+    download_thread.start()
 
 
 def _searchType(link_details):
@@ -136,7 +144,7 @@ def loadPage():
             parsePageLocally(file)
 
 
-def dumpPage(method):
+def dumpPage():
     """Dump page to txt file"""
     file_name = filedialog.asksaveasfilename(
         initialdir=os.path.realpath(__file__),
@@ -169,7 +177,6 @@ def altColors():
         COLOR_SCHEME = const.LIGHT_SCHEME
     elif COLOR_SCHEME == const.LIGHT_SCHEME:
         COLOR_SCHEME = const.DARK_SCHEME
-
     applyScheme(COLOR_SCHEME)
 
 
@@ -212,7 +219,7 @@ def _ctrPressed(event):
     pressedKey = event.keycode
 
     if pressedKey == 83:
-        dumpPage("raw")
+        dumpPage()
 
     if pressedKey == 189:
         changeFontSize("-")
@@ -242,17 +249,32 @@ main_wrapper.grid_columnconfigure(0, weight=1)
 
 
 def go_handler():
-    browser_field.config(cursor="watch")
-    try:
-        browse.go(adress_field, browser_field)
-        history.add(adress_field.get())
-    except Exception as ex:
-        errorHandler.handle(ex, browser_field)
-    browser_field.config(cursor="")
+
+    def threadFunc():
+        browser_field.config(cursor="watch")
+        try:
+            browse.go(adress_field, browser_field)
+            history.add(adress_field.get())
+        except Exception as ex:
+            errorHandler.handle(ex, browser_field)
+
+        browser_field.config(cursor="")
+        return 1
+
+    browser_thread = threading.Thread(target=threadFunc)
+    browser_thread.start()
 
 
 def historyBack_handler(event=None):
     history.back(adress_field, go_handler)
+
+
+def update():
+    print(threading.active_count())
+    browser_app.after(100, update)
+
+
+update()
 
 
 def enterPressed_handler(event):
@@ -265,7 +287,6 @@ def rightClick_handler(event):
 
 
 def linkClick_handler(link_details):
-    print(link_details)
     link_type, link_name, adress, domain, port = link_details
     gopher_url = "gopher://" + domain + ":" + port + adress
 
@@ -297,6 +318,15 @@ def linkClick_handler(link_details):
         os.system("start " + http_url)
 
 
+def progressBar_handler(state):
+    animation = ("|", "/", "-", "|", "\\", "-", "")
+    statusbar.config(text="Loading content, please wait " + animation[state])
+    if state == 6:
+        statusbar.config(text="Content loading finished")
+    statusbar.update_idletasks()
+
+
+browse.progressHandler = progressBar_handler
 browse.linkClick = linkClick_handler
 
 adress_field = ttk.Entry(top_wrapper)

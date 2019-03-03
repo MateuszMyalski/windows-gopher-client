@@ -5,7 +5,7 @@ import constans as const
 
 
 def linkClick(link_type, link_name, domain, adress, port):
-    """Describe how programm will behave after clicked on link."""
+    """Describe how programm will behave after clicking on link."""
     raise Exception("Fail while executing callback.")
 
 
@@ -65,8 +65,8 @@ def parseLine(line, hyperlink_manager):
         return "", tag
 
     # I don`t why I get it sometimes.
-    parsed_line = parsed_line.replace("error.host", "")
-    parsed_line = parsed_line.replace("null.host", "")
+    # parsed_line = parsed_line.replace("error.host", "")
+    # parsed_line = parsed_line.replace("null.host", "")
 
     # International message
     if parsed_line.startswith("i") and const.TAB in parsed_line:
@@ -107,6 +107,9 @@ def go(tk_adress_field, tk_browser_field):
     port = parsed_url.port
     query = parsed_url.query
 
+    # Set progresbar handler
+    conn.progressHandler = progressHandler
+
     # When is not link process to Veronica
     if hostname is None:
         hostname = "gopher.floodgap.com"
@@ -132,13 +135,14 @@ def go(tk_adress_field, tk_browser_field):
     # DEBUG
     # import os
     # os.system('cls')
-
     # Parse received data
     for line in page_source.readlines():
         # print(line)
         parsed_line = parseLine(line, hyperlink_manager)
         tk_browser_field.insert("insert", parsed_line[0], parsed_line[1])
     tk_browser_field.config(state="disabled")
+
+    return 1
 
 
 def downloadFile(url, name):
@@ -161,3 +165,11 @@ def downloadFile(url, name):
             file.write(line)
 
     return 1
+
+
+def progressHandler(state):
+    """Progress bar handler.
+
+    State can eqaual to 0, n mod 6, 6.
+    """
+    pass
