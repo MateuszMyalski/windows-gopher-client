@@ -12,7 +12,6 @@ class HyperlinkManager:
         self.text.tag_bind("hyper", "<Enter>", self._enter)
         self.text.tag_bind("hyper", "<Leave>", self._leave)
         self.text.tag_bind("hyper", "<Button-1>", self._click)
-        self.text.tag_bind("hyper", "<Button-2>", self._download)
 
         self.reset()
 
@@ -38,55 +37,3 @@ class HyperlinkManager:
             if tag[:6] == "hyper-":
                 self.links[tag][0](self.links[tag][1])
                 return
-
-    def _download(self, event):
-        link_details = []
-        for tag in self.text.tag_names(CURRENT):
-            if tag[:6] == "hyper-":
-                link_details = self.links[tag][1]
-
-        link_type, link_name, adress, domain, port = link_details
-        gopher_url = "gopher://" + domain + ":" + port + adress
-
-        auto_exec_formats = [".gif", ".jpeg", ".jpg", ".bmp", ".png", ".txt"]
-
-        # When middle click on DIR type open new tab
-        if link_details[0] == '1':
-            import os
-            from os import path
-            os.path.dirname(os.path.realpath(__file__))
-            programm_path = (path.abspath(sys.modules['__main__'].__file__))
-            os.system(programm_path + " " + gopher_url)
-            return 1
-
-        link_name = link_name.replace(" ", "_")
-        file_type = link_name[-4:].lower()
-
-        answer = messagebox.askquestion(
-            file_type.upper() + " FILE",
-            "To open this file you need to download it. Shall I to do that?"
-        )
-        if answer == "no":
-            return 0
-
-        if link_type in '01':
-            file_type = ".txt"
-            link_name += file_type
-        elif file_type[0] != '.':
-            file_type = ".unknown"
-            link_name += file_type
-
-        file_name = ""
-        for letter in link_name:
-            if not letter.lower() in const.FILENAME_CHAR_WHITELIST:
-                letter = "_"
-            file_name += letter
-
-        self.text.config(cursor="watch")
-        self.downloadFile_handler(gopher_url, file_name)
-        self.text.config(cursor="")
-
-        if file_type in auto_exec_formats:
-            import os
-            os.path.dirname(os.path.realpath(__file__))
-            os.system("start " + file_name)

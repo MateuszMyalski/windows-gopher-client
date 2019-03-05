@@ -2,6 +2,7 @@ import sys
 import os
 import threading
 import base64
+import subprocess
 import tkinter as tk
 from tkinter import ttk
 from tkinter import simpledialog
@@ -16,6 +17,8 @@ import browse
 # STYLES ----------------------------------------------------------------------
 FONT_SIZE = const.FONT_SIZE
 COLOR_SCHEME = const.DARK_SCHEME
+
+# UTILITY FUNCTIONS -----------------------------------------------------------
 
 
 def applyScheme(scheme):
@@ -64,7 +67,29 @@ def applyScheme(scheme):
     )
 
 
+def parseGopherUrl(details):
+    """Return propper gopher url"""
+    *_, adress, domain, port = details
+    try:
+        if adress[0] != '/':
+            adress = '/' + adress
+    except:
+        pass
+    return "gopher://" + domain + ":" + port + adress
+
+
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 # MAIN PROGRAMM ---------------------------------------------------------------
+
 
 # EXECUTE WITH SYSTEM`S ARGS --------------------------------------------------
 if len(sys.argv) == 2:
@@ -74,13 +99,8 @@ if len(sys.argv) == 2:
 
 
 def _downloadType(link_details):
-    link_type, link_name, adress, domain, port = link_details
-    try:
-        if adress[0] != '/':
-            adress = '/' + adress
-    except:
-        pass
-    gopher_url = "gopher://" + domain + ":" + port + adress
+    _, link_name, *_ = link_details
+    gopher_url = parseGopherUrl(link_details)
 
     auto_exec_formats = [".gif", ".jpeg", ".jpg", ".bmp", ".png", ".txt"]
 
@@ -91,11 +111,11 @@ def _downloadType(link_details):
         link_name += file_type
 
     file_name = filedialog.asksaveasfilename(
-        initialdir=os.path.realpath(__file__) + "/",
+        initialdir=os.path.realpath(__file__),
         defaultextension=file_type,
         title="Select file",
         filetypes=(
-            ("Default file type", "*" + file_type),
+            ("*" + file_type, "*" + file_type),
             ("Any file", "*.*")
         )
     )
@@ -112,7 +132,7 @@ def _downloadType(link_details):
 
         if file_type in auto_exec_formats:
             os.path.dirname(os.path.realpath(__file__))
-            os.system("start " + file_name)
+            subprocess.call("start " + file_name, shell=True)
         browser_field.config(cursor="")
 
         return 1
@@ -122,13 +142,8 @@ def _downloadType(link_details):
 
 
 def _searchType(link_details):
-    link_type, link_name, adress, domain, port = link_details
-    try:
-        if adress[0] != '/':
-            adress = '/' + adress
-    except:
-        pass
-    gopher_url = "gopher://" + domain + ":" + port + adress
+    gopher_url = parseGopherUrl(link_details)
+
     query = simpledialog.askstring(
         "Search",
         "Enter parameters for the remote application"
@@ -287,7 +302,7 @@ def parsePageLocally(file):
 
 def showAbout():
     """Show instruction about client"""
-    with open("about.txt", "rb") as file:
+    with open(resource_path("about.txt"), "rb") as file:
         parsePageLocally(file)
 
 
@@ -302,7 +317,7 @@ def goFloodgap():
 browser_app = tk.Tk()
 browser_app.geometry(const.DEFAULT_GEOMETRY)
 browser_app.title(const.DEFAULT_WINDOW_TITLE)
-browser_app.iconbitmap("icon.ico")
+browser_app.iconbitmap(resource_path("icon.ico"))
 
 # SETUP FRAME WRAPPERS --------------------------------------------------------
 top_wrapper = tk.Frame(browser_app)
@@ -350,13 +365,8 @@ def rightClick_handler(event):
 
 
 def linkClick_handler(link_details):
-    link_type, link_name, adress, domain, port = link_details
-    try:
-        if adress[0] != '/':
-            adress = '/' + adress
-    except:
-        pass
-    gopher_url = "gopher://" + domain + ":" + port + adress
+    link_type, *_ = link_details
+    gopher_url = parseGopherUrl(link_details)
 
     # CLICKABLE type item
     if link_type in "01+":
@@ -365,7 +375,7 @@ def linkClick_handler(link_details):
         go_handler()
 
     # CSO type item
-    if link_details == '2':
+    if link_type == '2':
         pass
 
     # ERROR type item
@@ -373,7 +383,7 @@ def linkClick_handler(link_details):
         historyBack_handler()
 
     # DOWNLOAD type item
-    if link_type in "4569gId":
+    if link_type in "4569gIds":
         _downloadType(link_details)
 
     # SEARCH type item
@@ -383,7 +393,7 @@ def linkClick_handler(link_details):
     # HTML type item
     if link_type == 'h':
         http_url = link_details[2].replace("URL:", "")
-        os.system("start " + http_url)
+        subprocess.call("start " + http_url, shell=True)
 
 
 def progressBar_handler(state):

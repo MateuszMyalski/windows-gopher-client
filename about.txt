@@ -58,10 +58,6 @@ correct file format.
 - Right Mouse Press 
                     History back
 
-- Middle Mouse Press 
-                    When on <DIR> - open new window
-                    Other type of link - download file
-
 - CTRL + C 
                     Copy text
 
